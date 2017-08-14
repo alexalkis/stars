@@ -20,8 +20,9 @@ NSTARS	= 900
 SPEED	= 7
 
 ;this says how many frames the speed should be displayed
-;when the speed changes. 200 frames is 200/50 = 4 seconds
-SHOWSPEED = 200
+;when the speed changes (with cursor up/cursor down)
+; 100 frames is 100/50 = 2 seconds 
+SHOWSPEED = 100
 
 
 	SECTION	tut,CODE
@@ -111,27 +112,11 @@ mainloop:
 	cmp.b	#69,Key		;escape key pressed?
 	beq.b	exit
 	cmp.b	#1,Key 		;'1' key pressed
-	bne	.next1
+	bne	.skip
 	bsr	load1		;let's load '1.raw' then...
-	bra	.break
-.next1	cmp.b	#76,Key		;cursor up?
-	bne	.next2
-	bsr	cursorUp
-	bra	.break
-.next2	cmp.b	#77,Key		;cursor down?
-	bne	.next3
-	bsr	cursorDown
-	bra	.break
-.next3	cmp.b	#79,Key		;cursor left?
-	bne	.next4
-	bsr	cursorLeft
-	bra	.break
-.next4	cmp.b	#78,Key		;cursor right?
-	bne	.break
-	bsr	cursorRight
-	bra	.break
 
-.break	bra.w	mainloop	;keep going
+
+.skip	bra.w	mainloop	;keep going
 exit:
 ;shutdown code lifted from leffmann's SetSystem.s 0.1 07-February-2009
 	bsr	removeInputHandler
@@ -158,9 +143,28 @@ exit:
 	moveq	#0,d0
 	rts
 
+actOnKeys:
+	cmp.b	#76,Key		;cursor up?
+	bne	.next2
+	bsr	cursorUp
+	bra	.break
+.next2	cmp.b	#77,Key		;cursor down?
+	bne	.next3
+	bsr	cursorDown
+	bra	.break
+.next3	cmp.b	#79,Key		;cursor left?
+	bne	.next4
+	bsr	cursorLeft
+	bra	.break
+.next4	cmp.b	#78,Key		;cursor right?
+	bne	.break
+	bsr	cursorRight
+	bra	.break
+.break	rts
+	
 
 cursorUp:
-	move.b	#0,Key
+	;; move.b	#0,Key
 	move.w	speed,d0
 	add.w	#1,d0
 	cmp.w	#100,d0
@@ -170,7 +174,7 @@ cursorUp:
 .exit	rts
 
 cursorDown:
-	move.b	#0,Key
+	;; move.b	#0,Key
 	move.w	speed,d0
 	sub.w	#1,d0
 	bmi.s	.exit
@@ -179,22 +183,21 @@ cursorDown:
 .exit	rts
 
 cursorRight:
-	move.b	#0,Key
+	;; move.b	#0,Key
 	move.w	hslide,d0
 	add.w	#1,d0
-	cmp.w	#26*8,d0
+	cmp.w	#(26-2)*8,d0
 	beq.s	.exit
 	move.w	d0,hslide
 .exit	rts
 
 cursorLeft:
-	move.b	#0,Key
+	;; move.b	#0,Key
 	move.w	hslide,d0
 	sub.w	#1,d0
 	bmi.s	.exit
 	move.w	d0,hslide
 .exit	rts
-
 
 load1:	
 	move.b	#0,Key		;so that mainloop won't keep calling us
@@ -321,7 +324,10 @@ interruptlev3:
 	btst 	#5,d0 ; interrupt vbl ? 
 	beq.w 	novbl
 
-	;-------  start     ----	
+	;-------  start     ----
+
+	bsr	actOnKeys
+	
 	lea.l	psubs,a4	;a4 is the table with the PlotPixels addresses
 	btst 	#10,$DFF016	;press right mouse button to enable raster
 	bne 	.noraster1	; timing
@@ -428,6 +434,7 @@ cont:	adda	#starsize,a6	;a6+=sizeof(star structure), go to next star
 	;and.w   #$ff,d0
 	move.w	hslide,d0
 	lsr.w	#4,d0
+	move.b Key,d0
 	bsr	PrintD0		;print it
 .noraster2
 	move.w	#$000,$dff180	
