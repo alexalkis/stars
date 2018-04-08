@@ -564,7 +564,7 @@ GetVBR:
 
 ;keyboard routines lifted from Bullfrog's tutorial
 ;added vbl interrupt setup as well
-setup_VBL_interrupt
+setup_VBL_interrupt:
 	bsr	GetVBR
 	move.l	d0,a0
 	move.w  #%0000000000001000,$dff09a
@@ -637,7 +637,7 @@ initstars:
 	dbf	d7,.ls
 	rts		
 
-GetFont	
+GetFont:
 	movem.l	d0-d7/a0-a6,-(sp)
 	move.w	ltf_Modulo,d0
 	lea	Font,a1			;destination
@@ -658,7 +658,7 @@ GetFont
 	rts
 
 
-PrintD0	;move.w	#$005,$dff180
+PrintD0: ;move.w	#$005,$dff180
 	movem.l	d0-d2/a0-a3,-(sp)
 	;move	#12345,d0
 	ext.l	d0

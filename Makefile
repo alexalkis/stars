@@ -11,7 +11,9 @@ star4kd: star4kd.s 1.raw
 	$(AS) -nosym -m68020 -Fhunkexe star4kd.s -o star4kd
 	ls -l star4kd
 
+TAGS: star4kd.s
+	find . -type f -iname "*.[si]" | etags -
 
 clean:
-	rm -f star4kd
+	rm -f star4kd TAGS \#*
 
